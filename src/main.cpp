@@ -2,7 +2,7 @@
 #include <DigiUSB.h>
 //#include <avr/eeprom.h>
 
-#define DEBUG 1
+#define DEBUG 0
 
 #define LRLIGTH_PIN 0
 #define SRLIGTH_PIN 1
@@ -10,7 +10,7 @@
 
 #define SETPOINT 500.0
 #define HYSTER 100
-#define LRL2DRL 0.2
+#define LRL2DRL 0.8
 
 // Простой фильтр Калмана
 float simpleKalman(float newVal) {
@@ -38,7 +38,8 @@ bool regulSR(float light) {
 
 // Управление яркостью дальнего света
 float regulLR(bool SRlightState, float light) {
-  float DRligth = /*(light) **/ 1024 * LRL2DRL;
+  //float DRligth = LRL2DRL * 1024; // constrain(pow(light / 1024, 2), 0, 1) * 1024;
+  float DRligth = 1024;
   if (SRlightState == true ) { 
     DRligth = 0;
   }
@@ -79,9 +80,16 @@ void loop() {
   DigiUSB.print(",");
   DigiUSB.println(DLRligt);
 #endif
-
-  //DigiUSB.refresh();
-  DigiUSB.delay(1000);
+  
+ // DigiUSB.delay(1000);
+ for (int i = 1; i <= 100; i++) {
+  regulLR(SRlightState, smooth);
+  DigiUSB.delay(3);
+  regulLR(true, 0);
+  DigiUSB.delay(7);
+ }
+//DigiUSB.refresh();
+  
 /*
   analogWrite(0,255); //Turn the pin on full (100%)
     DigiUSB.delay(1000);
